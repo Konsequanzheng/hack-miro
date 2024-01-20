@@ -11,8 +11,8 @@ const MeshComponent = () => {
   console.log(obj);
   console.log(mesh);
 
-  useFrame(() => {
-    mesh.current.rotation.y += 0.01;
+  useFrame(async () => {
+    mesh.current.rotation.z += 0.01;
   });
 
   return (
