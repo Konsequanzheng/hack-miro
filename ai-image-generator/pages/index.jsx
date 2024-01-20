@@ -6,6 +6,7 @@ export default function Main() {
   const [inputValue, setInputValue] = useState("");
   const [image, setImage] = useState("");
   const [loading, setLoading] = useState(false);
+  const [asset, setAsset] = useState("");
 
   useEffect(() => {
     // Opens the panel for our app UI when we click on icon in the left sidebar
@@ -21,6 +22,10 @@ export default function Main() {
   useEffect(() => {
     window.miro.board.ui.on("drop", drop);
   }, []);
+
+  useEffect(() => {
+    placeStickyNote();
+  }, [asset]);
 
   //drag and drop logic
   const drop = async ({ x, y, target }) => {
@@ -48,7 +53,7 @@ export default function Main() {
 
     // post our prompt to our backend
     try {
-      const response = await fetch("/api/replicate", {
+      const response = await fetch("/api/openai", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -61,10 +66,41 @@ export default function Main() {
 
       //set the image src to the URL which is returned by OpenAI call
       setImage(imageUrl);
+      setAsset(imageUrl);
     } catch (err) {
       console.log(err);
     }
     setLoading(false);
+  };
+
+  const placeStickyNote = async () => {
+    const position = await miro.board.experimental.findEmptySpace({
+      x: 0,
+      y: 0,
+      width: 1024,
+      height: 1024,
+    });
+    // If the board is empty then
+    // position has the following properties:
+    // {
+    //   x: 0,
+    //   y: 0,
+    //   width: 200,
+    //   height: 200
+    // }
+    console.log(position);
+    const image = await window.miro.board.createImage({
+      x: position.x,
+      y: position.y,
+      url: asset,
+    });
+    await window.miro.board.viewport.zoomTo(image);
+    // await miro.board.createStickyNote({
+    //   content: "I'm not overlaping any existing widgets",
+    //   x: position.x,
+    //   y: position.y,
+    //   width: position.width,
+    // });
   };
 
   return (
@@ -85,6 +121,8 @@ export default function Main() {
         {/* Img which needs to be draggable */}
         {Boolean(image) && <img className="miro-draggable" src={image} />}
       </div>
+
+      <Button onClick={placeStickyNote}>PlacePostIt</Button>
     </div>
   );
 }
