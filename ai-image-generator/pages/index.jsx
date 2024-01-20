@@ -10,18 +10,33 @@ export default function Main() {
   const [asset, setAsset] = useState("");
   const [title, setTitle] = useState("");
 
+  const [magicBoxCreated, setMagicBoxCreated] = useState(false);
+
   useEffect(() => {
     window.miro.board.ui.on("icon:click", async () => {
-      const magicBox = await miro.board.createImage({
-        title: "Magic Box",
-        url: "https://as1.ftcdn.net/v2/jpg/05/72/14/12/1000_F_572141234_oRsM7v29Ed0j1rYDcAhZwaO1VtBOSZaw.jpg",
-        x: 0, // Default value: horizontal center of the board
-        y: 0, // Default value: vertical center of the board
-        width: 100, // Set either 'width', or 'height'
-        rotation: 0.0,
-      });
+      var magicBox;
+      var magicBox = (await miro.board.get({ type: ["image"] })).find(
+        (element) => element.title === "Magic Box"
+      );
 
-      setInterval(checkIfAssetIsOverBox, 5000, magicBox);
+      if (magicBox === undefined) {
+        magicBox = await miro.board.createImage({
+          title: "Magic Box",
+          url: "https://as1.ftcdn.net/v2/jpg/05/72/14/12/1000_F_572141234_oRsM7v29Ed0j1rYDcAhZwaO1VtBOSZaw.jpg",
+          x: 0, // Default value: horizontal center of the board
+          y: 0, // Default value: vertical center of the board
+          width: 100, // Set either 'width', or 'height'
+          rotation: 0.0,
+        });
+        console.log("new box");
+      }
+
+      if (!magicBoxCreated) {
+        setInterval(checkIfAssetIsOverBox, 5000);
+        console.log("set polling");
+        setMagicBoxCreated(true);
+      }
+
       window.miro.board.ui.openPanel({
         url: `/?panel=1`,
       });
@@ -83,11 +98,16 @@ export default function Main() {
     setLoading(false);
   };
 
-  async function checkIfAssetIsOverBox(magicboxOld) {
+  async function checkIfAssetIsOverBox() {
     const items = await miro.board.get({
       type: ["image", "sticky_note"],
     });
-    const magicbox = await miro.board.getById(magicboxOld.id);
+    const magicbox = (
+      await miro.board.get({
+        type: ["image"],
+      })
+    ).find((item) => item.title === "Magic Box");
+
     if (magicbox === null) {
       return;
     }
