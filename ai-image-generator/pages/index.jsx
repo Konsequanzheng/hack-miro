@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import PromptInput from "../components/PromptInput";
 import Button from "../components/Button";
+import Renderer from "../components/Renderer";
 
 export default function Main() {
   const [inputValue, setInputValue] = useState("");
@@ -85,6 +86,9 @@ export default function Main() {
         {/* Img which needs to be draggable */}
         {Boolean(image) && <img className="miro-draggable" src={image} />}
       </div>
+
+      <Renderer></Renderer>
+      
     </div>
   );
 }
