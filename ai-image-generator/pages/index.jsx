@@ -49,7 +49,7 @@ export default function Main() {
 
     // post our prompt to our backend
     try {
-      const response = await fetch("/api/openai", {
+      const response = await fetch("/api/replicate", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
