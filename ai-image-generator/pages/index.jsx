@@ -12,6 +12,7 @@ export default function Main() {
   const [loading, setLoading] = useState(false);
   const [asset, setAsset] = useState("");
   const [title, setTitle] = useState("");
+  var firstLoad = useRef(false);
   const dropdownOptions = Array(
     "DallE",
     "Shap-E",
@@ -20,39 +21,39 @@ export default function Main() {
     "Describe Image",
     "Mind Map"
   );
-  const firstInterval = useRef(false);
+  const magicBoxCreated = useRef(false);
   const replicate = new Replicate({
     auth: process.env.REPLICATE_API_TOKEN,
   });
 
   useEffect(async () => {
-    var magicBox;
-    magicBox = (await miro.board.get({ type: ["image"] })).find(
-      (element) => element.title === "Magic Box"
-    );
-    var magicBoxCreated = false;
-    if (magicBox === undefined) {
-      magicBox = await miro.board.createImage({
-        title: "Magic Box",
-        url: "https://as1.ftcdn.net/v2/jpg/05/72/14/12/1000_F_572141234_oRsM7v29Ed0j1rYDcAhZwaO1VtBOSZaw.jpg",
-        x: 0, // Default value: horizontal center of the board
-        y: 0, // Default value: vertical center of the board
-        width: 100, // Set either 'width', or 'height'
-        rotation: 0.0,
-      });
-      console.log("new box");
-      magicBoxCreated = true;
-    }
-
-    if (magicBoxCreated) {
-      setInterval(checkIfAssetIsOverBox, 5000);
-
-      console.log("set polling");
-      // console.log(currIntervalGlobal);
-      // firstInterval.current = true;
-    }
-
     window.miro.board.ui.on("icon:click", async () => {
+      console.log("we are running this");
+      var magicBox;
+      magicBox = (await miro.board.get({ type: ["image"] })).find(
+        (element) => element.title === "Magic Box"
+      );
+      if (magicBox === undefined) {
+        magicBox = await miro.board.createImage({
+          title: "Magic Box",
+          url: "https://as1.ftcdn.net/v2/jpg/05/72/14/12/1000_F_572141234_oRsM7v29Ed0j1rYDcAhZwaO1VtBOSZaw.jpg",
+          x: 0, // Default value: horizontal center of the board
+          y: 0, // Default value: vertical center of the board
+          width: 100, // Set either 'width', or 'height'
+          rotation: 0.0,
+        });
+        console.log("new box");
+        
+      }
+
+      if (!magicBoxCreated.current) {
+        setInterval(checkIfAssetIsOverBox, 5000);
+        magicBoxCreated.current = true;
+
+        console.log("set polling");
+        // console.log(currIntervalGlobal);
+        // firstInterval.current = true;
+      }
       window.miro.board.ui.openPanel({
         url: `/?panel=1`,
       });
