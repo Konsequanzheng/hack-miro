@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import PromptInput from "../components/PromptInput";
 import Button from "../components/Button";
 import Renderer from "../components/Renderer";
+import temple from "../public/temple.json";
 
 export default function Main() {
   const [inputValue, setInputValue] = useState("");
@@ -12,36 +13,35 @@ export default function Main() {
 
   const [magicBoxCreated, setMagicBoxCreated] = useState(false);
 
+  // place all sticky notes for the temple
+  // useEffect(() => {
+  //   temple.forEach((item) => {
+  //     if (item.type === "image") {
+  //       miro.board.createImage({
+  //         title: item.title,
+  //         url: item.url,
+  //         x: item.x,
+  //         y: item.y,
+  //         width: item.width,
+  //         height: item.height,
+  //       });
+  //     } else if (item.type === "sticky_note") {
+  //       miro.board.createStickyNote({
+  //         x: item.x,
+  //         y: item.y,
+  //       });
+  //     }
+  //   });
+  // }, []);
+
+  // get all sticky note positions
+  // TODO: Delete once positions are saved in json
   useEffect(() => {
-    window.miro.board.ui.on("icon:click", async () => {
-      var magicBox;
-      var magicBox = (await miro.board.get({ type: ["image"] })).find(
-        (element) => element.title === "Magic Box"
-      );
-
-      if (magicBox === undefined) {
-        magicBox = await miro.board.createImage({
-          title: "Magic Box",
-          url: "https://as1.ftcdn.net/v2/jpg/05/72/14/12/1000_F_572141234_oRsM7v29Ed0j1rYDcAhZwaO1VtBOSZaw.jpg",
-          x: 0, // Default value: horizontal center of the board
-          y: 0, // Default value: vertical center of the board
-          width: 100, // Set either 'width', or 'height'
-          rotation: 0.0,
-        });
-        console.log("new box");
-      }
-
-      if (!magicBoxCreated) {
-        setInterval(checkIfAssetIsOverBox, 5000);
-        console.log("set polling");
-        setMagicBoxCreated(true);
-      }
-
-      window.miro.board.ui.openPanel({
-        url: `/?panel=1`,
-      });
+    const temp = miro.board.get({
+      type: ["image", "sticky_note"],
     });
-  }, []);
+    console.log(temp);
+  });
 
   // Register the drop event handler once.
   useEffect(() => {
