@@ -1,7 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import PromptInput from "../components/PromptInput";
 import Button from "../components/Button";
 import Renderer from "../components/Renderer";
+import Dropdown from "../components/DropdownMenu";
+import Replicate from "replicate";
+import * as DOMPurify from 'dompurify';
 
 export default function Main() {
   const [inputValue, setInputValue] = useState("");
@@ -9,34 +12,40 @@ export default function Main() {
   const [loading, setLoading] = useState(false);
   const [asset, setAsset] = useState("");
   const [title, setTitle] = useState("");
+  const dropdownOptions = Array("DallE", "Shap-E", "GaussianDream", "Choir", "Describe Image", "Mind Map");
+  const firstInterval = useRef(false);
+  const replicate = new Replicate({
+    auth: process.env.REPLICATE_API_TOKEN,
+  });
 
-  const [magicBoxCreated, setMagicBoxCreated] = useState(false);
+  useEffect(async () => {
+    var magicBox;
+    magicBox = (await miro.board.get({ type: ["image"] })).find(
+      (element) => element.title === "Magic Box");
+    var magicBoxCreated = false;
+    if (magicBox === undefined) {
+      magicBox = await miro.board.createImage({
+        title: "Magic Box",
+        url: "https://as1.ftcdn.net/v2/jpg/05/72/14/12/1000_F_572141234_oRsM7v29Ed0j1rYDcAhZwaO1VtBOSZaw.jpg",
+        x: 0, // Default value: horizontal center of the board
+        y: 0, // Default value: vertical center of the board
+        width: 100, // Set either 'width', or 'height'
+        rotation: 0.0,
+      });
+      console.log("new box");
+      magicBoxCreated = true;
+    }
 
-  useEffect(() => {
+    if (magicBoxCreated) {
+      setInterval(checkIfAssetIsOverBox, 5000);
+    
+      console.log("set polling");
+      // console.log(currIntervalGlobal);
+      // firstInterval.current = true;
+
+    }
+    
     window.miro.board.ui.on("icon:click", async () => {
-      var magicBox;
-      var magicBox = (await miro.board.get({ type: ["image"] })).find(
-        (element) => element.title === "Magic Box"
-      );
-
-      if (magicBox === undefined) {
-        magicBox = await miro.board.createImage({
-          title: "Magic Box",
-          url: "https://as1.ftcdn.net/v2/jpg/05/72/14/12/1000_F_572141234_oRsM7v29Ed0j1rYDcAhZwaO1VtBOSZaw.jpg",
-          x: 0, // Default value: horizontal center of the board
-          y: 0, // Default value: vertical center of the board
-          width: 100, // Set either 'width', or 'height'
-          rotation: 0.0,
-        });
-        console.log("new box");
-      }
-
-      if (!magicBoxCreated) {
-        setInterval(checkIfAssetIsOverBox, 5000);
-        console.log("set polling");
-        setMagicBoxCreated(true);
-      }
-
       window.miro.board.ui.openPanel({
         url: `/?panel=1`,
       });
@@ -67,73 +76,79 @@ export default function Main() {
     setLoading(false);
   };
 
-  //handles the prompt input being typed in
-  const handleInputChange = (newValue) => {
-    setInputValue(newValue);
-  };
-
-  const handleButtonClick = async () => {
-    setImage("");
-    setLoading(true);
-
-    // post our prompt to our backend
-    try {
-      const response = await fetch("/api/openai", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ prompt: inputValue }),
-      });
-
-      //get the response back from backend, which has the URL which we are looking for
-      const { data: imageUrl } = await response.json();
-
-      //set the image src to the URL which is returned by OpenAI call
-      setImage(imageUrl);
-      setAsset(imageUrl);
-    } catch (err) {
-      console.log(err);
-    }
-    setLoading(false);
-  };
-
   async function checkIfAssetIsOverBox() {
-    const items = await miro.board.get({
+    console.log("ping");
+    const items = await window.miro.board.get({
       type: ["image", "sticky_note"],
     });
     const magicbox = (
-      await miro.board.get({
+      await window.miro.board.get({
         type: ["image"],
       })
     ).find((item) => item.title === "Magic Box");
 
-    if (magicbox === null) {
+    const setting = (
+      await window.miro.board.get({
+        type: ["sticky_note"],
+        tags: ["Setting"],
+      })
+    )[0];
+
+    if (magicbox === null || setting === null || magicbox === undefined || setting === undefined) {
       return;
     }
 
     for (var index in items) {
       const item = items[index];
-      if (
-        Math.abs(item.x - magicbox.x) < item.width / 2 + magicbox.width / 2 &&
-        Math.abs(item.y - magicbox.y) < item.height / 2 + magicbox.height / 2
-      ) {
-        if (item.type === "sticky_note") {
-          const prompt = item.content.replace(/(<([^>]+)>)/gi, "");
-          console.log(prompt);
-          await miro.board.remove(item);
-          const response = await fetch("/api/openai", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ prompt: prompt }),
-          });
-          //get the response back from backend, which has the URL which we are looking for
-          const { data: imageUrl } = await response.json();
-
-          setAsset(imageUrl);
-          setTitle(prompt);
+      if (Math.abs(item.x - magicbox.x) < item.width / 2 + magicbox.width / 2 &&
+        Math.abs(item.y - magicbox.y) < item.height / 2 + magicbox.height / 2) 
+      {
+        var model = setting.content.replace(/(<([^>]+)>)/gi, "");
+        console.log(model);
+        switch(model){
+          case dropdownOptions[0]:
+            if (item.type === "sticky_note") {
+              const prompt = item.content.replace(/(<([^>]+)>)/gi, "");
+              console.log(prompt);
+              await window.miro.board.remove(item);
+              const response = await fetch("/api/openai", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ prompt: prompt }),
+              });
+              //get the response back from backend, which has the URL which we are looking for
+              const { data: imageUrl } = await response.json();
+    
+              setAsset(imageUrl);
+              setTitle(prompt);
+            }
+            break;
+          case dropdownOptions[1]:
+            if (item.type === "sticky_note") {
+              const prompt = item.content.replace(/(<([^>]+)>)/gi, "");
+              console.log(prompt);
+              await window.miro.board.remove(item);
+              const response = await replicate.run(
+                "cjwbw/shap-e:5957069d5c509126a73c7cb68abcddbb985aeefa4d318e7c63ec1352ce6da68c",
+                {
+                  input: {
+                    prompt: prompt,
+                  },
+                }
+              );
+              const imageUrl = response[0];
+    
+              setAsset(imageUrl);
+              setTitle(prompt);
+            }
+          case dropdownOptions[2]:
+            break;
+          case dropdownOptions[3]:
+            break;
+          default:
+            break;
         }
       }
     }
@@ -170,24 +185,18 @@ export default function Main() {
     // });
   };
 
+  const listItems = dropdownOptions.map(option =>
+    <li key={option}>
+      {option}
+    </li>
+  );
+
   return (
     <div className="grid">
-      {/* React component which takes the user input and uses that as a prompt for OpenAI image generation */}
-      <PromptInput
-        placeholder={"Van Gogh inspired portrait of a dog"}
-        value={inputValue}
-        onChange={handleInputChange}
-      />
-
-      {/* Button which calls the OpenAI backend (pages/api/openai.js) with the prompt */}
-      <Button onClick={handleButtonClick}>Generate Image</Button>
-
-      <div className="image-container cs1 ce12">
-        {/* Spinner needs to be hidden by default, otherwise will spin when opening app first time */}
-        {Boolean(loading) && <div className="spinner" />}
-        {/* Img which needs to be draggable */}
-        {Boolean(image) && <img className="miro-draggable" src={image} />}
-      </div>
+      <p>The following options are available: </p>
+      <ul>
+        {listItems}
+      </ul>
     </div>
   );
 }
