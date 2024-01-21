@@ -13,12 +13,12 @@ export default function Main() {
   const [asset, setAsset] = useState("");
   const [title, setTitle] = useState("");
   const dropdownOptions = Array(
-    "DallE",
-    "Shap-E",
+    "Image Generator",
+    "3D Generator",
+    "Summarize",
     "GaussianDream",
     "Choir",
-    "Describe Image",
-    "Mind Map"
+    "Describe Image"
   );
   const firstInterval = useRef(false);
   const replicate = new Replicate({
@@ -157,6 +157,23 @@ export default function Main() {
               setTitle(prompt);
             }
           case dropdownOptions[2]:
+            if (item.type === "sticky_note") {
+              const prompt = item.content.replace(/(<([^>]+)>)/gi, "");
+              console.log(prompt);
+              await window.miro.board.remove(item);
+              const response = await fetch("/api/summary", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ prompt: prompt }),
+              });
+              //get the response back from backend, which has the URL which we are looking for
+              const { data: imageUrl } = await response.json();
+
+              setAsset(imageUrl);
+              setTitle(prompt);
+            }
             break;
           case dropdownOptions[3]:
             break;
