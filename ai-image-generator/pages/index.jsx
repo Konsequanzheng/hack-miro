@@ -45,6 +45,7 @@ export default function Main() {
         console.log("new box");
         
       }
+      window.miro.board.viewport.zoomTo(magicBox);
 
       if (!magicBoxCreated.current) {
         setInterval(checkIfAssetIsOverBox, 5000);
