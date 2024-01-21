@@ -19,9 +19,6 @@ export default function Main() {
     "Image Generator",
     "3D Generator",
     "Summarize",
-    "GaussianDream",
-    "Choir",
-    "Describe Image"
   );
   const magicBoxCreated = useRef(false);
   const replicate = new Replicate({
@@ -238,8 +235,6 @@ export default function Main() {
               console.log(imageUrl.summary);
               setText(imageUrl.summary);
             }
-            break;
-          case dropdownOptions[3]:
             break;
           default:
             break;
