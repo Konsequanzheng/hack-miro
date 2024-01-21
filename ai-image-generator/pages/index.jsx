@@ -171,23 +171,16 @@ export default function Main() {
   };
 
   return (
-    <div className="grid">
-      {/* React component which takes the user input and uses that as a prompt for OpenAI image generation */}
-      <PromptInput
-        placeholder={"Van Gogh inspired portrait of a dog"}
-        value={inputValue}
-        onChange={handleInputChange}
-      />
-
-      {/* Button which calls the OpenAI backend (pages/api/openai.js) with the prompt */}
-      <Button onClick={handleButtonClick}>Generate Image</Button>
-
-      <div className="image-container cs1 ce12">
-        {/* Spinner needs to be hidden by default, otherwise will spin when opening app first time */}
-        {Boolean(loading) && <div className="spinner" />}
-        {/* Img which needs to be draggable */}
-        {Boolean(image) && <img className="miro-draggable" src={image} />}
+    <div>
+      <div>
+        <h1>Welcome to the Miro Magic Box 🧙‍♂️</h1>
       </div>
+      <div>
+        Write something in a sticky note, drag it on the box, and see your ideas
+        come to life! ✨
+      </div>
+      <br />
+      <img src="magicBox.png" width={300} />
     </div>
   );
 }
