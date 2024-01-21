@@ -12,6 +12,8 @@ export default function Main() {
   const [loading, setLoading] = useState(false);
   const [asset, setAsset] = useState("");
   const [title, setTitle] = useState("");
+  const [text, setText] = useState("");
+
   var firstLoad = useRef(false);
   const dropdownOptions = Array(
     "Image Generator",
@@ -43,7 +45,6 @@ export default function Main() {
           rotation: 0.0,
         });
         console.log("new box");
-        
       }
       window.miro.board.viewport.zoomTo(magicBox);
 
@@ -67,8 +68,13 @@ export default function Main() {
   }, []);
 
   useEffect(() => {
-    placeStickyNote();
+    placeAsset();
   }, [asset]);
+
+  useEffect(() => {
+    if (text === "") return;
+    placeStickyNote();
+  }, [text]);
 
   //drag and drop logic
   const drop = async ({ x, y, target }) => {
@@ -172,9 +178,8 @@ export default function Main() {
               });
               //get the response back from backend, which has the URL which we are looking for
               const { data: imageUrl } = await response.json();
-
-              setAsset(imageUrl);
-              setTitle(prompt);
+              console.log(imageUrl.summary);
+              setText(imageUrl.summary);
             }
             break;
           case dropdownOptions[3]:
@@ -186,7 +191,7 @@ export default function Main() {
     }
   }
 
-  const placeStickyNote = async () => {
+  const placeAsset = async () => {
     const position = await miro.board.experimental.findEmptySpace({
       x: 0,
       y: 0,
@@ -215,6 +220,31 @@ export default function Main() {
     //   y: position.y,
     //   width: position.width,
     // });
+  };
+
+  const placeStickyNote = async () => {
+    const position = await miro.board.experimental.findEmptySpace({
+      x: 0,
+      y: 0,
+      width: 500,
+      height: 500,
+    });
+    // If the board is empty then
+    // position has the following properties:
+    // {
+    //   x: 0,
+    //   y: 0,
+    //   width: 200,
+    //   height: 200
+    // }
+    console.log(position);
+    const note = await miro.board.createStickyNote({
+      content: text,
+      x: position.x,
+      y: position.y,
+      width: position.width,
+    });
+    await window.miro.board.viewport.zoomTo(note);
   };
 
   const listItems = dropdownOptions.map((option) => (

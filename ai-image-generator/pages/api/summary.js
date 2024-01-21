@@ -1,4 +1,5 @@
 import OpenAI from "openai";
+const { convert } = require("html-to-text");
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY, // This is also the default, can be omitted
@@ -27,7 +28,7 @@ async function generateSummary(text) {
 
 export default async (req, res) => {
   // grab URL or prompt from the front end
-  let urlToScrape = await req.body.urlToScrape;
+  let urlToScrape = await req.body.prompt;
 
   try {
     const response = await fetch(
@@ -35,16 +36,20 @@ export default async (req, res) => {
     );
     const htmlContent = await response.text();
 
+    console.log("HELLO");
     // Use DOM parsing to extract text from specific elements (e.g., paragraphs)
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(htmlContent, "text/html");
-    const extractedText = Array.from(doc.querySelectorAll("p"))
-      .map((p) => p.textContent)
-      .join("\n");
+    // const parser = new DOMParser();
+    // const doc = parser.parseFromString(htmlContent, "text/html");
+    // const extractedText = Array.from(doc.querySelectorAll("p"))
+    //   .map((p) => p.textContent)
+    //   .join("\n");
+    var extractedText = convert(htmlContent, { wordwrap: 130 });
 
+    console.log("ONE");
     // Generate summary using OpenAI
     const summary = await generateSummary(extractedText);
 
+    console.log("TWO");
     // send summary to front end
     res.status(200).json({
       success: true,
@@ -52,6 +57,7 @@ export default async (req, res) => {
         summary: summary,
       },
     });
+    console.log("THREE");
   } catch (error) {
     console.error("Error while processing:", error);
     // send error to front end, so the user can easily see that something went wrong
