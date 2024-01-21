@@ -94,7 +94,7 @@ export default function Main() {
   async function checkIfAssetIsOverBox() {
     console.log("ping");
     const items = await window.miro.board.get({
-      type: ["image", "sticky_note"],
+      type: ["image", "sticky_note", "preview"],
     });
     const magicbox = (
       await window.miro.board.get({
@@ -167,6 +167,22 @@ export default function Main() {
           case dropdownOptions[2]:
             if (item.type === "sticky_note") {
               const prompt = item.content.replace(/(<([^>]+)>)/gi, "");
+              console.log(prompt);
+              await window.miro.board.remove(item);
+              const response = await fetch("/api/summary", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ prompt: prompt }),
+              });
+              //get the response back from backend, which has the URL which we are looking for
+              const { data: imageUrl } = await response.json();
+              console.log(imageUrl.summary);
+              setText(imageUrl.summary);
+            }
+            if (item.type === "preview") {
+              const prompt = item.url;
               console.log(prompt);
               await window.miro.board.remove(item);
               const response = await fetch("/api/summary", {
