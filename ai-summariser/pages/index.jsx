@@ -46,20 +46,18 @@ export default function Main() {
 
   async function generateSummary(text) {
     try {
-      const response = await fetch("/api/summarize", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          prompt: text,
-        }),
+      const completion = await openai.chat.completions.create({
+        messages: [
+          { role: "system", content: "You need to generate a summary of this text under 100 words." },
+          { role: "user", content: text },
+        ],
+        model: "gpt-4",
       });
-      const result = await response.json();
-      return result.data.summary;
+  
+      return completion.choices[0].message.content.trim();
     } catch (error) {
       console.error("Error generating summary:", error);
-      return "Summary not available";
+      throw error;
     }
   }
 
