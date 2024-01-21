@@ -4,7 +4,7 @@ import Button from "../components/Button";
 import Renderer from "../components/Renderer";
 import Dropdown from "../components/DropdownMenu";
 import Replicate from "replicate";
-import * as DOMPurify from 'dompurify';
+import * as DOMPurify from "dompurify";
 
 export default function Main() {
   const [inputValue, setInputValue] = useState("");
@@ -12,7 +12,14 @@ export default function Main() {
   const [loading, setLoading] = useState(false);
   const [asset, setAsset] = useState("");
   const [title, setTitle] = useState("");
-  const dropdownOptions = Array("DallE", "Shap-E", "GaussianDream", "Choir", "Describe Image", "Mind Map");
+  const dropdownOptions = Array(
+    "DallE",
+    "Shap-E",
+    "GaussianDream",
+    "Choir",
+    "Describe Image",
+    "Mind Map"
+  );
   const firstInterval = useRef(false);
   const replicate = new Replicate({
     auth: process.env.REPLICATE_API_TOKEN,
@@ -21,7 +28,8 @@ export default function Main() {
   useEffect(async () => {
     var magicBox;
     magicBox = (await miro.board.get({ type: ["image"] })).find(
-      (element) => element.title === "Magic Box");
+      (element) => element.title === "Magic Box"
+    );
     var magicBoxCreated = false;
     if (magicBox === undefined) {
       magicBox = await miro.board.createImage({
@@ -38,13 +46,12 @@ export default function Main() {
 
     if (magicBoxCreated) {
       setInterval(checkIfAssetIsOverBox, 5000);
-    
+
       console.log("set polling");
       // console.log(currIntervalGlobal);
       // firstInterval.current = true;
-
     }
-    
+
     window.miro.board.ui.on("icon:click", async () => {
       window.miro.board.ui.openPanel({
         url: `/?panel=1`,
@@ -94,18 +101,24 @@ export default function Main() {
       })
     )[0];
 
-    if (magicbox === null || setting === null || magicbox === undefined || setting === undefined) {
+    if (
+      magicbox === null ||
+      setting === null ||
+      magicbox === undefined ||
+      setting === undefined
+    ) {
       return;
     }
 
     for (var index in items) {
       const item = items[index];
-      if (Math.abs(item.x - magicbox.x) < item.width / 2 + magicbox.width / 2 &&
-        Math.abs(item.y - magicbox.y) < item.height / 2 + magicbox.height / 2) 
-      {
+      if (
+        Math.abs(item.x - magicbox.x) < item.width / 2 + magicbox.width / 2 &&
+        Math.abs(item.y - magicbox.y) < item.height / 2 + magicbox.height / 2
+      ) {
         var model = setting.content.replace(/(<([^>]+)>)/gi, "");
         console.log(model);
-        switch(model){
+        switch (model) {
           case dropdownOptions[0]:
             if (item.type === "sticky_note") {
               const prompt = item.content.replace(/(<([^>]+)>)/gi, "");
@@ -120,7 +133,7 @@ export default function Main() {
               });
               //get the response back from backend, which has the URL which we are looking for
               const { data: imageUrl } = await response.json();
-    
+
               setAsset(imageUrl);
               setTitle(prompt);
             }
@@ -130,16 +143,16 @@ export default function Main() {
               const prompt = item.content.replace(/(<([^>]+)>)/gi, "");
               console.log(prompt);
               await window.miro.board.remove(item);
-              const response = await replicate.run(
-                "cjwbw/shap-e:5957069d5c509126a73c7cb68abcddbb985aeefa4d318e7c63ec1352ce6da68c",
-                {
-                  input: {
-                    prompt: prompt,
-                  },
-                }
-              );
-              const imageUrl = response[0];
-    
+              const response = await fetch("/api/replicate", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ prompt: prompt }),
+              });
+              //get the response back from backend, which has the URL which we are looking for
+              const { data: imageUrl } = await response.json();
+
               setAsset(imageUrl);
               setTitle(prompt);
             }
@@ -185,18 +198,14 @@ export default function Main() {
     // });
   };
 
-  const listItems = dropdownOptions.map(option =>
-    <li key={option}>
-      {option}
-    </li>
-  );
+  const listItems = dropdownOptions.map((option) => (
+    <li key={option}>{option}</li>
+  ));
 
   return (
     <div className="grid">
       <p>The following options are available: </p>
-      <ul>
-        {listItems}
-      </ul>
+      <ul>{listItems}</ul>
     </div>
   );
 }
