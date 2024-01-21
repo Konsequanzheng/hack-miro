@@ -32,21 +32,61 @@ export default function Main() {
     window.miro.board.ui.on("icon:click", async () => {
       console.log("we are running this");
       var magicBox;
+      var settingNote;
+      const position = await miro.board.experimental.findEmptySpace({
+        x: 0,
+        y: 0,
+        width: 250,
+        height: 200,
+      });
       magicBox = (await miro.board.get({ type: ["image"] })).find(
         (element) => element.title === "Magic Box"
       );
+      settingNote = (await window.miro.board.get({
+        type: ["sticky_note"],
+        tags: ["Setting"],
+      }))[0];
+      
       if (magicBox === undefined) {
         magicBox = await miro.board.createImage({
           title: "Magic Box",
           url: "https://as1.ftcdn.net/v2/jpg/05/72/14/12/1000_F_572141234_oRsM7v29Ed0j1rYDcAhZwaO1VtBOSZaw.jpg",
-          x: 0, // Default value: horizontal center of the board
-          y: 0, // Default value: vertical center of the board
+          x: position.x, // Default value: horizontal center of the board
+          y: position.y, // Default value: vertical center of the board
           width: 100, // Set either 'width', or 'height'
           rotation: 0.0,
         });
         console.log("new box");
       }
       window.miro.board.viewport.zoomTo(magicBox);
+
+      if (settingNote === undefined) {
+        var tag;
+        try {
+          tag = await miro.board.createTag({
+            title: 'Setting',
+            color: 'red',
+          });
+        } catch(exception){
+          console.log(exception);
+          tag = (await miro.board.get({ type : ["tag"] }))
+            .find((item) => item.title === "Setting");
+        }
+        settingNote = await miro.board.createStickyNote({
+          content: dropdownOptions[0],
+          style: {
+            fillColor: 'light_yellow', // Default value: light yellow
+            textAlign: 'center', // Default alignment: center
+            textAlignVertical: 'middle', // Default alignment: middle
+          },
+          x: magicBox.x + 150, // Default value: horizontal center of the board
+          y: magicBox.y, // Default value: vertical center of the board
+          shape: 'square',
+          width: 100, // Set either 'width', or 'height'
+          tagIds: [tag.id],
+        });
+        
+      }
 
       if (!magicBoxCreated.current) {
         setInterval(checkIfAssetIsOverBox, 5000);
@@ -56,6 +96,7 @@ export default function Main() {
         // console.log(currIntervalGlobal);
         // firstInterval.current = true;
       }
+      console.log("what");
       window.miro.board.ui.openPanel({
         url: `/?panel=1`,
       });
