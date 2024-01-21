@@ -213,7 +213,10 @@ export default function Main() {
       </div>
       <br />
       <img src="magicBox.png" width={300} />
-      <div className="grid">
+      <div>
+        <p>
+          Change the mode by editing the <i>setting</i> note
+        </p>
         <p>The following options are available: </p>
         <ul>{listItems}</ul>
       </div>
